@@ -16,7 +16,7 @@ services:
     container_name: medication-frontend
     restart: unless-stopped
     ports:
-      - "80:80"     # Map host port 80 to frontend Nginx container
+      - "8080:80"     # Map host port 8080 to frontend Nginx container port 80
     depends_on:
       - backend
 
