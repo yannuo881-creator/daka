@@ -10,7 +10,7 @@ interface Log {
   timestamp: string;
 }
 
-const API_URL = 'http://localhost:3000/api/logs';
+const API_URL = '/api/logs';
 
 function App() {
   const [logs, setLogs] = useState<Log[]>([]);
