@@ -8,6 +8,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// 格式化时间戳，确保其包含Z，让前端知道这是UTC时间
+const formatLog = (row) => {
+  if (row && row.timestamp && !row.timestamp.endsWith('Z')) {
+    row.timestamp = row.timestamp.replace(' ', 'T') + 'Z';
+  }
+  return row;
+};
+
 // 获取所有打卡记录
 app.get('/api/logs', (req, res) => {
   const sql = 'SELECT * FROM logs ORDER BY timestamp DESC';
@@ -15,14 +23,16 @@ app.get('/api/logs', (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json({ logs: rows });
+    const formattedRows = rows.map(formatLog);
+    res.json({ logs: formattedRows });
   });
 });
 
 // 记录吃药打卡
 app.post('/api/logs', (req, res) => {
-  const sql = 'INSERT INTO logs DEFAULT VALUES';
-  db.run(sql, function(err) {
+  const now = new Date().toISOString();
+  const sql = 'INSERT INTO logs (timestamp) VALUES (?)';
+  db.run(sql, [now], function(err) {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -32,7 +42,7 @@ app.post('/api/logs', (req, res) => {
        if (err) {
          return res.status(500).json({ error: err.message });
        }
-       res.status(201).json({ log: row });
+       res.status(201).json({ log: formatLog(row) });
     });
   });
 });

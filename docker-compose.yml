@@ -10,11 +10,14 @@ services:
     environment:
       - PORT=3000
       - DB_PATH=/app/data/medication.db
+      - TZ=Asia/Shanghai
 
   frontend:
     build: ./frontend
     container_name: medication-frontend
     restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
     ports:
       - "8080:80"     # Map host port 8080 to frontend Nginx container port 80
     depends_on:
