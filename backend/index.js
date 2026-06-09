@@ -8,10 +8,10 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// 格式化时间戳，确保其包含Z，让前端知道这是UTC时间
+// 格式化时间戳，确保其包含T，方便前端解析
 const formatLog = (row) => {
   if (row && row.timestamp && !row.timestamp.endsWith('Z')) {
-    row.timestamp = row.timestamp.replace(' ', 'T') + 'Z';
+    row.timestamp = row.timestamp.replace(' ', 'T') ;
   }
   return row;
 };
@@ -30,7 +30,7 @@ app.get('/api/logs', (req, res) => {
 
 // 记录吃药打卡
 app.post('/api/logs', (req, res) => {
-  const now = new Date().toISOString();
+  const now = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).replace(' ', 'T');
   const sql = 'INSERT INTO logs (timestamp) VALUES (?)';
   db.run(sql, [now], function(err) {
     if (err) {

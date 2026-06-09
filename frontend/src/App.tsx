@@ -51,7 +51,7 @@ function App() {
 
   // 检查特定日期是否有打卡记录
   const hasLogForDate = (date: Date) => {
-    return logs.some(log => dayjs(log.timestamp).isSame(date, 'day'));
+    return logs.some(log => dayjs(log.timestamp.replace('T', ' ')).isSame(date, 'day'));
   };
 
   // 给有打卡记录的日期添加特殊的 CSS class
@@ -65,7 +65,7 @@ function App() {
   };
 
   // 获取选中日期的打卡记录
-  const selectedDateLogs = logs.filter(log => dayjs(log.timestamp).isSame(selectedDate, 'day'));
+  const selectedDateLogs = logs.filter(log => dayjs(log.timestamp.replace('T', ' ')).isSame(selectedDate, 'day'));
 
   return (
     <div className="app-container">
@@ -106,7 +106,7 @@ function App() {
           ) : (
             <ul className="log-list">
               {selectedDateLogs.map(log => {
-                const date = dayjs(log.timestamp);
+                const date = dayjs(log.timestamp.replace('T', ' '));
                 return (
                   <li key={log.id} className="log-item">
                     <div className="log-time">{date.format('HH:mm:ss')}</div>
