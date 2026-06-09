@@ -38,7 +38,6 @@ function App() {
     try {
       const response = await axios.post(API_URL);
       const newLog = response.data.log;
-      // Add new log to the beginning of the list
       setLogs([newLog, ...logs]);
       setError(null);
     } catch (err) {
@@ -49,12 +48,10 @@ function App() {
     }
   };
 
-  // 检查特定日期是否有打卡记录
   const hasLogForDate = (date: Date) => {
-    return logs.some(log => dayjs(log.timestamp.replace('T', ' ')).isSame(date, 'day'));
+    return logs.some(log => dayjs(log.timestamp.replace("T", " ")).isSame(date, 'day'));
   };
 
-  // 给有打卡记录的日期添加特殊的 CSS class
   const tileClassName = ({ date, view }: { date: Date, view: string }) => {
     if (view === 'month') {
       if (hasLogForDate(date)) {
@@ -64,53 +61,68 @@ function App() {
     return null;
   };
 
-  // 获取选中日期的打卡记录
-  const selectedDateLogs = logs.filter(log => dayjs(log.timestamp.replace('T', ' ')).isSame(selectedDate, 'day'));
+  const selectedDateLogs = logs.filter(log => dayjs(log.timestamp.replace("T", " ")).isSame(selectedDate, 'day'));
+  const todayLogsCount = logs.filter(log => dayjs(log.timestamp.replace("T", " ")).isSame(dayjs(), 'day')).length;
 
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1>💊 吃药打卡</h1>
-        <p>记录您每天的用药情况，保持健康！</p>
+        <div className="brand-info">
+          <h1>达卡健康 <span>DAKA HEALTH</span></h1>
+        </div>
+        <div className="slogan">准时达卡，健康到家</div>
       </header>
 
       <main className="app-main">
-        <section className="action-section">
-          <button 
-            className={`record-button ${loading ? 'loading' : ''}`}
-            onClick={handleRecord}
-            disabled={loading}
-          >
-            {loading ? '记录中...' : '💊 记录吃药'}
-          </button>
-          {error && <p className="error-message">{error}</p>}
+        <section className="dashboard-summary">
+          <div className="progress-header">
+            <h3>今日打卡进度</h3>
+            <div className="progress-count">
+              {todayLogsCount}<span>次记录</span>
+            </div>
+          </div>
+          
+          <div className="record-btn-wrapper">
+            <button
+              className={`record-button ${loading ? 'loading' : ''}`}
+              onClick={handleRecord}
+              disabled={loading}
+            >
+              {loading ? '同步中...' : '💊 立即记录吃药'}
+            </button>
+            {error && <p className="error-message">{error}</p>}
+          </div>
         </section>
 
         <section className="calendar-section">
           <h2>打卡日历</h2>
           <div className="calendar-wrapper">
-            <Calendar 
-              onChange={(val) => setSelectedDate(val as Date)} 
+            <Calendar
+              onChange={(val) => setSelectedDate(val as Date)}
               value={selectedDate}
               tileClassName={tileClassName}
+              locale="zh-CN"
             />
           </div>
         </section>
 
         <section className="history-section">
-          <h2>{dayjs(selectedDate).format('YYYY年MM月DD日')} 记录</h2>
+          <h2>
+            {dayjs(selectedDate).format('YYYY年MM月DD日')}
+            <span>打卡流水记录</span>
+          </h2>
           {selectedDateLogs.length === 0 ? (
             <div className="empty-state">
-              <p>这一天没有打卡记录。</p>
+              <p>暂无用药数据</p>
             </div>
           ) : (
             <ul className="log-list">
               {selectedDateLogs.map(log => {
-                const date = dayjs(log.timestamp.replace('T', ' '));
+                const date = dayjs(log.timestamp.replace("T", " "));
                 return (
                   <li key={log.id} className="log-item">
-                    <div className="log-time">{date.format('HH:mm:ss')}</div>
-                    <div className="log-status">✅ 已服药</div>
+                    <div className="log-time">{date.format('HH:mm')}</div>
+                    <div className="log-status">已服药</div>
                   </li>
                 );
               })}
