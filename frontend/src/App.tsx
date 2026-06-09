@@ -116,10 +116,10 @@ function App() {
       <main>
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero__copy">
-            <div className="eyebrow">准时达卡，健康到家</div>
-            <h1 id="hero-title">每天一次确认，把健康稳稳记在今天。</h1>
+            <div className="eyebrow">每天一次，准时达卡</div>
+            <h1 id="hero-title">把今天要做的事，稳稳打上勾。</h1>
             <p>
-              达卡健康用温和提醒、清晰记录和大单元格日历，帮助患者与家人确认当天是否已经打卡。
+              达卡健康用温和提醒、清晰记录和大单元格日历，帮你确认当天的重要事项是否已经打卡。
             </p>
             <div className="hero__actions">
               <button className="primary-action" onClick={handleRecord} disabled={loading || todayCompleted}>
@@ -145,7 +145,7 @@ function App() {
               <div className="progress-track" aria-label={todayCompleted ? '今日已完成打卡' : '今日尚未打卡'}>
                 <span style={{ width: `${progressPercent}%` }} />
               </div>
-              <p>一天只需确认一次，方便患者和照护人快速判断今日是否已完成。</p>
+              <p>一天只需确认一次，方便你快速判断今日事项是否已完成。</p>
             </div>
 
             <div className="medicine-stack" aria-label="今日打卡确认卡片">
