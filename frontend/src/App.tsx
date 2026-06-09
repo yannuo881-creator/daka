@@ -11,13 +11,7 @@ interface Log {
 }
 
 const API_URL = '/api/logs';
-const DAILY_TARGET = 4;
-
-const medicines = [
-  { name: '晨间处方', dose: '2 粒', time: '08:30', status: '已打卡', tone: 'success' },
-  { name: '午后维持', dose: '1 片', time: '13:00', status: '待提醒', tone: 'warning' },
-  { name: '晚间护理', dose: '5 ml', time: '20:30', status: '未开始', tone: 'neutral' },
-];
+const DAILY_TARGET = 1;
 
 function parseLogTime(timestamp: string) {
   return dayjs(timestamp.replace('T', ' '));
@@ -59,7 +53,30 @@ function App() {
       });
   }, []);
 
+  const selectedDateLogs = useMemo(
+    () => logs.filter((log) => parseLogTime(log.timestamp).isSame(selectedDate, 'day')),
+    [logs, selectedDate],
+  );
+
+  const todayLogsCount = useMemo(
+    () => logs.filter((log) => parseLogTime(log.timestamp).isSame(dayjs(), 'day')).length,
+    [logs],
+  );
+
+  const todayLog = useMemo(
+    () => logs.find((log) => parseLogTime(log.timestamp).isSame(dayjs(), 'day')),
+    [logs],
+  );
+
+  const todayCompleted = todayLogsCount > 0;
+  const progressPercent = todayCompleted ? 100 : 0;
+
   const handleRecord = async () => {
+    if (todayCompleted) {
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await axios.post(API_URL);
@@ -67,7 +84,7 @@ function App() {
       setLogs((currentLogs) => [newLog, ...currentLogs]);
       setError(null);
     } catch (err) {
-      console.error('Failed to record medication', err);
+      console.error('Failed to record check-in', err);
       setError('记录失败，请重试。');
     } finally {
       setLoading(false);
@@ -85,18 +102,6 @@ function App() {
     return null;
   };
 
-  const selectedDateLogs = useMemo(
-    () => logs.filter((log) => parseLogTime(log.timestamp).isSame(selectedDate, 'day')),
-    [logs, selectedDate],
-  );
-
-  const todayLogsCount = useMemo(
-    () => logs.filter((log) => parseLogTime(log.timestamp).isSame(dayjs(), 'day')).length,
-    [logs],
-  );
-
-  const progressPercent = Math.min((todayLogsCount / DAILY_TARGET) * 100, 100);
-
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -112,14 +117,14 @@ function App() {
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero__copy">
             <div className="eyebrow">准时达卡，健康到家</div>
-            <h1 id="hero-title">把每一次服药，都稳稳记在今天。</h1>
+            <h1 id="hero-title">每天一次确认，把健康稳稳记在今天。</h1>
             <p>
-              达卡健康用温和的提醒、清晰的时间记录和大单元格日历，帮助患者与家人减少漏服焦虑。
+              达卡健康用温和提醒、清晰记录和大单元格日历，帮助患者与家人确认当天是否已经打卡。
             </p>
             <div className="hero__actions">
-              <button className="primary-action" onClick={handleRecord} disabled={loading}>
+              <button className="primary-action" onClick={handleRecord} disabled={loading || todayCompleted}>
                 <span className="button-icon" aria-hidden="true" />
-                {loading ? '同步中' : '开始打卡'}
+                {todayCompleted ? '今日已打卡' : loading ? '同步中' : '开始打卡'}
               </button>
               <span className="hero__domain">daka.aisms.sbs</span>
             </div>
@@ -134,32 +139,32 @@ function App() {
             <div className="section-label">今日进度</div>
             <div className="progress-card">
               <div className="progress-card__count">
-                <strong>{todayLogsCount}</strong>
+                <strong>{todayCompleted ? 1 : 0}</strong>
                 <span>/{DAILY_TARGET} 次</span>
               </div>
-              <div className="progress-track" aria-label={`今日已完成 ${todayLogsCount} 次`}>
+              <div className="progress-track" aria-label={todayCompleted ? '今日已完成打卡' : '今日尚未打卡'}>
                 <span style={{ width: `${progressPercent}%` }} />
               </div>
-              <p>数字记录会优先突出，方便患者和照护人快速确认今日状态。</p>
+              <p>一天只需确认一次，方便患者和照护人快速判断今日是否已完成。</p>
             </div>
 
-            <div className="medicine-stack" aria-label="药箱卡片">
-              {medicines.map((medicine) => (
-                <article className="medicine-card" key={medicine.name}>
-                  <div>
-                    <h2>{medicine.name}</h2>
-                    <span>{medicine.dose}</span>
-                  </div>
-                  <div className="medicine-card__meta">
-                    <strong>{medicine.time}</strong>
-                    <em className={`status-pill status-pill--${medicine.tone}`}>{medicine.status}</em>
-                  </div>
-                </article>
-              ))}
+            <div className="medicine-stack" aria-label="今日打卡确认卡片">
+              <article className="medicine-card">
+                <div>
+                  <h2>今日打卡确认</h2>
+                  <span>每日 1 次</span>
+                </div>
+                <div className="medicine-card__meta">
+                  <strong>{todayLog ? parseLogTime(todayLog.timestamp).format('HH:mm') : '今日'}</strong>
+                  <em className={`status-pill status-pill--${todayCompleted ? 'success' : 'warning'}`}>
+                    {todayCompleted ? '已打卡' : '待打卡'}
+                  </em>
+                </div>
+              </article>
             </div>
 
-            <button className="record-button" onClick={handleRecord} disabled={loading}>
-              {loading ? '正在同步记录' : '立即记录吃药'}
+            <button className="record-button" onClick={handleRecord} disabled={loading || todayCompleted}>
+              {todayCompleted ? '今日已打卡' : loading ? '正在同步记录' : '立即打卡'}
             </button>
             {error && <p className="error-message">{error}</p>}
           </aside>
@@ -171,8 +176,8 @@ function App() {
                 <h2>用大格子看清每一天</h2>
               </div>
               <div className="calendar-legend">
-                <span className="legend-success">已服</span>
-                <span className="legend-warning">漏服</span>
+                <span className="legend-success">已打卡</span>
+                <span className="legend-warning">未打卡</span>
               </div>
             </div>
             <Calendar
@@ -194,7 +199,7 @@ function App() {
 
             {selectedDateLogs.length === 0 ? (
               <div className="empty-state">
-                <strong>暂无用药数据</strong>
+                <strong>暂无打卡数据</strong>
                 <span>选择其他日期或完成一次打卡后，这里会显示具体时间。</span>
               </div>
             ) : (
@@ -205,7 +210,7 @@ function App() {
                     <li key={log.id} className="log-item">
                       <div className="log-time">{date.format('HH:mm')}</div>
                       <div>
-                        <strong>已服药</strong>
+                        <strong>已打卡</strong>
                         <span>{date.format('YYYY-MM-DD')}</span>
                       </div>
                     </li>
